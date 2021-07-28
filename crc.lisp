@@ -1,3 +1,5 @@
+;;; A simple implementation of serial CRC based on the paper "A PAINLESS GUIDE TO CRC ERROR DETECTION ALGORITHMS" by Ross N. Williams
+;;; The Polynomial and message are passed as lists e.g (simple-crc '(1 0 0 1 0 1) '(1 0 0 1)) 
 (defun degree-of-polynomial (polynomial)
   (1- (length polynomial)))
 
