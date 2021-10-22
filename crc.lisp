@@ -30,7 +30,7 @@
       (let* ((crc-register-msb (most-significant-bit crc-register))
 	     (updated-crc-register (update-crc-register crc-register message))
 	     (xored-register (xor updated-crc-register (rest polynomial))))
-	(format t "~s~%" crc-register)
+	;(format t "~s~%" crc-register)
 	(if (= 1 crc-register-msb)
 	    (crc (rest message) xored-register polynomial)
 	    (crc (rest message) updated-crc-register polynomial)))))
@@ -41,7 +41,7 @@
       (let* ((crc-register-msb (most-significant-bit crc-register))
 	     (updated-crc-register (update-crc-register crc-register message))
 	     (xored-register (xor updated-crc-register (rest polynomial))))
-	(format t "~s~%" crc-register)
+	;(format t "~s~%" crc-register)
 	(if (= 1 crc-register-msb)
 	    (crc-1 (rest message) xored-register polynomial)
 	    (crc-1 (rest message) updated-crc-register polynomial)))))
@@ -57,11 +57,11 @@
 	 (crc-register (initialize-crc-register degree-of-polynomial))
 	 (augmented-message (augment-message degree-of-polynomial message)))
     (crc-1 augmented-message crc-register polynomial)))
+
 (defun list-shift-left (list number-of-shifts)
   (if (< number-of-shifts 1)
       list
       (list-shift-left (append (rest list) (list (car list))) (1- number-of-shifts))))
-
 
 (defun generate-one-hot-lists (bit-width)
   (let ((seed (append (list-of-zeros (1- bit-width)) (list 1))))
@@ -75,3 +75,25 @@
 (defun generate-MxM-matrix (polynomial)
   (let ((polynomial-width (degree-of-polynomial polynomial)))
     (map 'list #'(lambda (x) (simple-crc-1 polynomial x)) (generate-one-hot-lists polynomial-width))))
+
+(defun participating-bits (matrix rows columns variable-name)
+  (loop :for column :below columns
+	:collect  
+	(loop  :for row :below rows
+	       :when (= 1 (aref matrix row column))
+		 :collect (format nil "~a[~a]" variable-name row))))
+
+(defun merge-all-participating-bits (crc-in-participating-bits data-in-participating-bits)
+  (let ((i -1))
+    (map 'list #'(lambda (crc-in data-in)
+		   (list (format nil "crcOut[~d]" (incf i)) (append data-in crc-in))) crc-in-participating-bits data-in-participating-bits)))
+
+(defun generate-equation (polynomial message-width)
+  (let* ((polynomial-degree (degree-of-polynomial polynomial)) 
+	 (NxM-matrix (make-array (list message-width polynomial-degree) :initial-contents (map 'list #'reverse (generate-nxm-matrix polynomial message-width))))
+	 (MxM-matrix (make-array (list polynomial-degree polynomial-degree) :initial-contents (map 'list #'reverse (generate-mxm-matrix polynomial))))
+	 (data-in-participating-bits (participating-bits nxm-matrix message-width polynomial-degree "dataIn"))
+	 (crc-in-participating-bits (participating-bits mxm-matrix polynomial-degree polynomial-degree "crcIn"))
+	 (all-participating-bits (merge-all-participating-bits data-in-participating-bits crc-in-participating-bits)))
+    (format nil "~{~{~a = ~{~a~^ \^ ~} ;~}~% ~}" all-participating-bits)))
+	 
