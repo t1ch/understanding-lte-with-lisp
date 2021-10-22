@@ -96,4 +96,5 @@
 	 (crc-in-participating-bits (participating-bits mxm-matrix polynomial-degree polynomial-degree "crcIn"))
 	 (all-participating-bits (merge-all-participating-bits data-in-participating-bits crc-in-participating-bits)))
     (format nil "~{~{~a = ~{~a~^ \^ ~} ;~}~% ~}" all-participating-bits)))
-	 
+
+   
